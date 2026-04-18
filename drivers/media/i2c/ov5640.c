@@ -1588,7 +1588,53 @@ static int ov5640_set_virtual_channel(struct ov5640_dev *sensor)
 			__func__, channel);
 		return -EINVAL;
 	}
+	/* clk_prepare */
+	ov5640_read_reg(sensor, 0x481F, &temp);
+	dev_err(&client->dev,
+			"%s:481f %x\n",
+			__func__, temp);
+	ov5640_write_reg(sensor, 0x481F, 0x1a);
+	ov5640_read_reg(sensor, 0x481F, &temp);
+	dev_err(&client->dev,
+			"%s:481f %x\n",
+			__func__, temp);
 
+	/* clk_trail */
+	ov5640_read_reg(sensor, 0x4823, &temp);
+	dev_err(&client->dev,
+			"%s:0x4823 %x\n",
+			__func__, temp);
+	ov5640_write_reg(sensor, 0x4823, 0x10);
+	ov5640_read_reg(sensor, 0x4823, &temp);
+	dev_err(&client->dev,
+			"%s:0x4823 %x\n",
+			__func__, temp);
+	/* hs_prepare */
+	ov5640_read_reg(sensor, 0x4827, &temp);
+	dev_err(&client->dev,
+			"%s:0x4827 %x\n",
+			__func__, temp);
+	ov5640_write_reg(sensor, 0x4827, 0x16);
+	ov5640_read_reg(sensor, 0x4827, &temp);
+	dev_err(&client->dev,
+			"%s:0x4827 %x\n",
+			__func__, temp);
+
+
+	/* hs_trail */
+	ov5640_read_reg(sensor, 0x481b, &temp);
+	dev_err(&client->dev,
+			"%s:0x481b %x\n",
+			__func__, temp);
+	ov5640_write_reg(sensor, 0x481b, 0x0c);
+	ov5640_read_reg(sensor, 0x481b, &temp);
+	dev_err(&client->dev,
+			"%s:0x481b %x\n",
+			__func__, temp);
+
+
+
+	
 	ret = ov5640_read_reg(sensor, OV5640_REG_DEBUG_MODE, &temp);
 	if (ret)
 		return ret;

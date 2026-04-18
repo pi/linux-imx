@@ -189,6 +189,16 @@
 #define FB_SYNC_OE_LOW_ACT		0x80000000
 #define FB_SYNC_CLK_LAT_FALL	0x40000000
 
+// swap-rb{
+#define LCDC_CTRL2                      0x20
+#define LCDC_CTRL2_PIN_ORDER_MASK       (0x7 << 12)
+#define LCDC_CTRL2_PIN_ORDER_E_MASK     (0x7 << 16)
+#define LCDC_CTRL2_PIN_ORDER_RGB        (0x0 << 12)
+#define LCDC_CTRL2_PIN_ORDER_BGR        (0x5 << 12)
+#define LCDC_CTRL2_PIN_ORDER_E_RGB      (0x0 << 16)
+#define LCDC_CTRL2_PIN_ORDER_E_BGR      (0x5 << 16)
+// swap-rb}
+
 enum mxsfb_devtype {
 	MXSFB_V3,
 	MXSFB_V4,
@@ -264,6 +274,8 @@ struct mxsfb_info {
 	struct pm_qos_request pm_qos_req;
 
 	char disp_videomode[NAME_LEN];
+
+	bool swap_rb;
 
 #ifdef CONFIG_FB_MXC_OVERLAY
 	struct mxsfb_layer overlay;
@@ -819,6 +831,21 @@ static bool mxsfb_par_equal(struct fb_info *fbi, struct mxsfb_info *host)
 	return memcmp(&oldvar, &newvar, sizeof(struct fb_var_screeninfo)) == 0;
 }
 
+// swab-rb{
+static void mxsfb_set_color_order(struct mxsfb_info *host)
+{
+    u32 ctrl2;
+
+    ctrl2 = readl(host->base + LCDC_CTRL2);
+
+    ctrl2 &= ~(LCDC_CTRL2_PIN_ORDER_MASK | LCDC_CTRL2_PIN_ORDER_E_MASK);
+    if (host->swap_rb)
+        ctrl2 |= LCDC_CTRL2_PIN_ORDER_BGR | LCDC_CTRL2_PIN_ORDER_E_BGR;
+
+    writel(ctrl2, host->base + LCDC_CTRL2);
+}
+// swap-rb}
+
 static int mxsfb_set_par(struct fb_info *fb_info)
 {
 	struct mxsfb_info *host = fb_info->par;
@@ -966,6 +993,10 @@ static int mxsfb_set_par(struct fb_info *fb_info)
 	writel(fb_info->fix.smem_start +
 			fb_info->fix.line_length * fb_info->var.yoffset,
 			host->base + host->devdata->next_buf);
+
+// swap-rb{
+	mxsfb_set_color_order(host);
+// swap-rb}
 
 	if (reenable)
 		mxsfb_enable_controller(fb_info);
@@ -2290,6 +2321,8 @@ static int mxsfb_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "Failed to allocate pseudo_palette memory\n");
 		goto fb_release;
 	}
+
+	host->swap_rb = of_property_read_bool(pdev->dev.of_node, "swap-rb");
 
 	INIT_LIST_HEAD(&fb_info->modelist);
 
