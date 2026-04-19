@@ -1,16 +1,16 @@
-#source /opt/imx6ul/environment-setup-cortexa7t2hf-neon-poky-linux-gnueabi
-source /opt/6ul-5.10sdk/environment-setup-cortexa7t2hf-neon-poky-linux-gnueabi
-make distclean
+#imxmake ARCH=arm myd_y6ulx_defconfig
+#imxmake ARCH=arm O="$PWD/../build" mys_6ulx_defconfig
+#imxmake mys_6ulx_defconfig
 
-make ARCH=arm  myd_y6ulx_defconfig
-#make ARCH=arm O="$PWD/../build" mys_6ulx_defconfig
-#make mys_6ulx_defconfig
-make ARCH=arm zImage dtbs   -j16
-#make  modules  -j16
+#imxmake ARCH=arm min_6ull_defconfig
+make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- zImage dtbs -j32
+#make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- modules -j32
 
-
-#make modules_install O="$PWD/../build"
 mkdir -p $PWD/../build
+
 cp $PWD/arch/arm/boot/zImage $PWD/../build/
 cp $PWD/arch/arm/boot/dts/myd-y6ull*.dtb $PWD/../build/
 cp $PWD/arch/arm/boot/dts/myd-y6ul*.dtb $PWD/../build/
+
+#imxmake ARCH=arm modules -j32 2>!modules_build_errors.txt
+#make modules_install O="$PWD/../build"
