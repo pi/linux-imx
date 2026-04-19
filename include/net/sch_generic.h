@@ -242,8 +242,7 @@ static inline void qdisc_run_end(struct Qdisc *qdisc)
 		spin_unlock(&qdisc->seqlock);
 
 		if (unlikely(test_bit(__QDISC_STATE_MISSED,
-				      &qdisc->state))) {
-			clear_bit(__QDISC_STATE_MISSED, &qdisc->state);
+				      &qdisc->state)))
 			__netif_schedule(qdisc);
 	} else {
 #ifdef CONFIG_PREEMPT_RT
