@@ -54,7 +54,7 @@ static int imx_pcm_hw_params(struct snd_soc_component *component,
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_dai *cpu_dai = asoc_rtd_to_cpu(rtd, 0);
 	struct snd_dmaengine_dai_dma_data *dma_data;
-	struct dma_slave_config config;
+	struct dma_slave_config config = { 0 };
 	struct dma_chan *chan;
 	int err = 0;
 
@@ -81,11 +81,6 @@ static int imx_pcm_hw_params(struct snd_soc_component *component,
 	snd_dmaengine_pcm_set_config_from_dai_data(substream,
 					dma_data,
 					&config);
-
-	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
-		config.dst_fifo_num = dma_data->fifo_num;
-	else
-		config.src_fifo_num = dma_data->fifo_num;
 
 	return dmaengine_slave_config(chan, &config);
 }

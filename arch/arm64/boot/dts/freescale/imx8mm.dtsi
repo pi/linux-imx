@@ -402,10 +402,12 @@
 	};
 
 	soc@0 {
-		compatible = "simple-bus";
+		compatible = "fsl,imx8mm-soc", "simple-bus";
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges = <0x0 0x0 0x0 0x3e000000>;
+		nvmem-cells = <&imx8mm_uid>;
+		nvmem-cell-names = "soc_unique_id";
 
 		caam_sm: caam-sm@100000 {
 			compatible = "fsl,imx6q-caam-sm";
@@ -669,6 +671,10 @@
 				/* For nvmem subnodes */
 				#address-cells = <1>;
 				#size-cells = <1>;
+
+				imx8mm_uid: unique-id@410 {
+					reg = <0x4 0x8>;
+				};
 
 				cpu_speed_grade: speed-grade@10 {
 					reg = <0x10 4>;
@@ -1449,20 +1455,6 @@
 		};
 	};
 
-	rpmsg: rpmsg{
-		compatible = "fsl,imx8mq-rpmsg";
-		/* up to now, the following channels are used in imx rpmsg
-		 * - tx1/rx1: messages channel.
-		 * - general interrupt1: remote proc finish re-init rpmsg stack
-		 *   when A core is partition reset.
-		 */
-		mbox-names = "tx", "rx", "rxdb";
-		mboxes = <&mu 0 1
-			  &mu 1 1
-			  &mu 3 1>;
-		status = "disabled";
-	};
-
 	vpu_h1: vpu_h1@38320000 {
 		compatible = "nxp,imx8mm-hantro-h1";
 		reg = <0x0 0x38320000 0x0 0x10000>;
@@ -1505,6 +1497,11 @@
 		assigned-clock-parents = <&clk IMX8MM_VPU_PLL_OUT>, <&clk IMX8MM_SYS_PLL1_800M>;
 		assigned-clock-rates = <600000000>, <800000000>;
 		power-domains = <&vpu_g2_pd>;
+		status = "disabled";
+	};
+
+	vpu_v4l2: vpu_v4l2 {
+		compatible = "nxp,imx8m-vsiv4l2";
 		status = "disabled";
 	};
 

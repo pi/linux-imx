@@ -8,6 +8,7 @@
  * Copyright (C) 2008 Embedded Alley Solutions, Inc All Rights Reserved.
  */
 
+#include <linux/busfreq-imx.h>
 #include <linux/clk.h>
 #include <linux/io.h>
 #include <linux/iopoll.h>
@@ -58,6 +59,17 @@ static void mxsfb_set_formats(struct mxsfb_drm_private *mxsfb)
 
 	if (mxsfb->connector->display_info.num_bus_formats)
 		bus_format = mxsfb->connector->display_info.bus_formats[0];
+
+	/* Do some clean-up that we might have from a previous mode */
+	ctrl = CTRL_SHIFT_DIR(1);
+	ctrl |= CTRL_SHIFT_NUM(0xff);
+	ctrl |= CTRL_SET_WORD_LENGTH(0xff);
+	ctrl |= CTRL_DF16;
+	ctrl |= CTRL_SET_BUS_WIDTH(0xff);
+	writel(ctrl, mxsfb->base + LCDC_CTRL + REG_CLR);
+	writel(CTRL2_ODD_LINE_PATTERN(CTRL2_LINE_PATTERN_CLR) |
+	       CTRL2_EVEN_LINE_PATTERN(CTRL2_LINE_PATTERN_CLR),
+	       mxsfb->base + LCDC_V4_CTRL2 + REG_CLR);
 
 	ctrl = CTRL_BYPASS_COUNT | CTRL_MASTER;
 
@@ -146,7 +158,7 @@ static void mxsfb_set_formats(struct mxsfb_drm_private *mxsfb)
 	}
 
 	writel(ctrl1, mxsfb->base + LCDC_CTRL1);
-	writel(ctrl, mxsfb->base + LCDC_CTRL);
+	writel(ctrl, mxsfb->base + LCDC_CTRL + REG_SET);
 
 	return;
 err:
@@ -184,6 +196,35 @@ static void mxsfb_enable_controller(struct mxsfb_drm_private *mxsfb)
 	reg = readl(mxsfb->base + LCDC_VDCTRL4);
 	reg |= VDCTRL4_SYNC_SIGNALS_ON;
 	writel(reg, mxsfb->base + LCDC_VDCTRL4);
+
+	/*
+	 * Enable recovery on underflow.
+	 *
+	 * There is some sort of corner case behavior of the controller,
+	 * which could rarely be triggered at least on i.MX6SX connected
+	 * to 800x480 DPI panel and i.MX8MM connected to DPI->DSI->LVDS
+	 * bridged 1920x1080 panel (and likely on other setups too), where
+	 * the image on the panel shifts to the right and wraps around.
+	 * This happens either when the controller is enabled on boot or
+	 * even later during run time. The condition does not correct
+	 * itself automatically, i.e. the display image remains shifted.
+	 *
+	 * It seems this problem is known and is due to sporadic underflows
+	 * of the LCDIF FIFO. While the LCDIF IP does have underflow/overflow
+	 * IRQs, neither of the IRQs trigger and neither IRQ status bit is
+	 * asserted when this condition occurs.
+	 *
+	 * All known revisions of the LCDIF IP have CTRL1 RECOVER_ON_UNDERFLOW
+	 * bit, which is described in the reference manual since i.MX23 as
+	 * "
+	 *   Set this bit to enable the LCDIF block to recover in the next
+	 *   field/frame if there was an underflow in the current field/frame.
+	 * "
+	 * Enable this bit to mitigate the sporadic underflows.
+	 */
+	reg = readl(mxsfb->base + LCDC_CTRL1);
+	reg |= CTRL1_RECOVERY_ON_UNDERFLOW;
+	writel(reg, mxsfb->base + LCDC_CTRL1);
 
 	writel(CTRL_RUN, mxsfb->base + LCDC_CTRL + REG_SET);
 	writel(CTRL1_RECOVERY_ON_UNDERFLOW, mxsfb->base + LCDC_CTRL1 + REG_SET);
@@ -288,6 +329,9 @@ static void mxsfb_crtc_mode_set_nofb(struct mxsfb_drm_private *mxsfb)
 
 	/* Clear the FIFOs */
 	writel(CTRL1_FIFO_CLEAR, mxsfb->base + LCDC_CTRL1 + REG_SET);
+	readl(mxsfb->base + LCDC_CTRL1);
+	writel(CTRL1_FIFO_CLEAR, mxsfb->base + LCDC_CTRL1 + REG_CLR);
+	readl(mxsfb->base + LCDC_CTRL1);
 
 	if (mxsfb->devdata->has_overlay)
 		writel(0, mxsfb->base + LCDC_AS_CTRL);
@@ -413,6 +457,7 @@ static void mxsfb_crtc_atomic_enable(struct drm_crtc *crtc,
 	struct drm_device *drm = mxsfb->drm;
 	dma_addr_t paddr;
 
+	request_bus_freq(BUS_FREQ_HIGH);
 	pm_runtime_get_sync(drm->dev);
 	mxsfb_enable_axi_clk(mxsfb);
 
@@ -452,6 +497,7 @@ static void mxsfb_crtc_atomic_disable(struct drm_crtc *crtc,
 
 	mxsfb_disable_axi_clk(mxsfb);
 	pm_runtime_put_sync(drm->dev);
+	release_bus_freq(BUS_FREQ_HIGH);
 }
 
 static int mxsfb_crtc_enable_vblank(struct drm_crtc *crtc)
@@ -575,6 +621,7 @@ static void mxsfb_plane_primary_atomic_update(struct drm_plane *plane,
 	struct mxsfb_drm_private *mxsfb = to_mxsfb_drm_private(plane->dev);
 	struct drm_plane_state *new_state = plane->state;
 	struct drm_framebuffer *fb = plane->state->fb;
+	struct drm_framebuffer *old_fb = old_pstate->fb;
 	dma_addr_t paddr;
 	u32 src_off, src_w, stride, cpp = 0;
 
@@ -597,6 +644,10 @@ static void mxsfb_plane_primary_atomic_update(struct drm_plane *plane,
 		src_w = new_state->src_w >> 16;
 		mxsfb_set_fb_hcrop(mxsfb, src_w, stride);
 	}
+
+	/* Update format if changed */
+	if (old_fb && old_fb->format->format != fb->format->format)
+		mxsfb_set_formats(mxsfb);
 }
 
 static void mxsfb_plane_overlay_atomic_update(struct drm_plane *plane,

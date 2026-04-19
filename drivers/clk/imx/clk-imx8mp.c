@@ -148,12 +148,9 @@ static struct imx_blk_ctrl_hw imx8mp_media_blk_ctrl_hws[] = {
 	IMX_BLK_CTRL_CLK_GATE("mipi_csi2_aclk", IMX8MP_CLK_MEDIA_BLK_CTRL_MIPI_CSI2_ACLK, 0x4, 10, "media_cam2_pix_root_clk"),
 	IMX_BLK_CTRL_CLK_GATE("lcdif2_pixel_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_LCDIF2_PIXEL, 0x4, 11, "media_disp2_pix_root_clk"),
 	IMX_BLK_CTRL_CLK_GATE("lcdif2_apb_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_LCDIF2_APB, 0x4, 12, "media_apb_root_clk"),
-	IMX_BLK_CTRL_CLK_GATE("isp1_cor_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_ISP1_COR, 0x4, 13, "media_isp_root_clk"),
-	IMX_BLK_CTRL_CLK_GATE("isp1_axi_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_ISP1_AXI, 0x4, 14, "media_axi_root_clk"),
-	IMX_BLK_CTRL_CLK_GATE("isp1_ahb_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_ISP1_AHB, 0x4, 15, "media_apb_root_clk"),
-	IMX_BLK_CTRL_CLK_GATE("isp0_cor_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_ISP0_COR, 0x4, 16, "media_isp_root_clk"),
-	IMX_BLK_CTRL_CLK_GATE("isp0_axi_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_ISP0_AXI, 0x4, 17, "media_axi_root_clk"),
-	IMX_BLK_CTRL_CLK_GATE("isp0_ahb_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_ISP0_AHB, 0x4, 18, "media_apb_root_clk"),
+	IMX_BLK_CTRL_CLK_GATE("isp_cor_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_ISP_COR, 0x4, 16, "media_isp_root_clk"),
+	IMX_BLK_CTRL_CLK_GATE("isp_axi_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_ISP_AXI, 0x4, 17, "media_axi_root_clk"),
+	IMX_BLK_CTRL_CLK_GATE("isp_ahb_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_ISP_AHB, 0x4, 18, "media_apb_root_clk"),
 	IMX_BLK_CTRL_CLK_GATE("dwe_cor_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_DWE_COR, 0x4, 19, "media_axi_root_clk"),
 	IMX_BLK_CTRL_CLK_GATE("dwe_axi_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_DWE_AXI, 0x4, 20, "media_axi_root_clk"),
 	IMX_BLK_CTRL_CLK_GATE("dwe_ahb_clk", IMX8MP_CLK_MEDIA_BLK_CTRL_DWE_AHB, 0x4, 21, "media_apb_root_clk"),
@@ -437,10 +434,6 @@ static const char * const imx8mp_can2_sels[] = {"osc_24m", "sys_pll2_200m", "sys
 						"sys_pll1_160m", "sys_pll1_800m", "sys_pll3_out",
 						"sys_pll2_250m", "audio_pll2_out", };
 
-static const char * const imx8mp_pcie_phy_sels[] = {"osc_24m", "sys_pll2_100m", "sys_pll2_500m",
-						    "clk_ext1", "clk_ext2", "clk_ext3",
-						    "clk_ext4", "sys_pll1_400m", };
-
 static const char * const imx8mp_pcie_aux_sels[] = {"osc_24m", "sys_pll2_200m", "sys_pll2_50m",
 						    "sys_pll3_out", "sys_pll2_100m", "sys_pll1_80m",
 						    "sys_pll1_160m", "sys_pll1_200m", };
@@ -699,7 +692,7 @@ static const char * const imx8mp_dram_core_sels[] = {"dram_pll_out", "dram_alt_r
 static struct clk_hw **hws;
 static struct clk_hw_onecell_data *clk_hw_data;
 
-static int __init imx_clk_init_on(struct device_node *np,
+static int imx_clk_init_on(struct device_node *np,
 				  struct clk_hw * const clks[])
 {
 	u32 *array;
@@ -764,12 +757,6 @@ static int imx8mp_clocks_probe(struct platform_device *pdev)
 	hws[IMX8MP_CLK_EXT2] = imx_obtain_fixed_clk_hw(np, "clk_ext2");
 	hws[IMX8MP_CLK_EXT3] = imx_obtain_fixed_clk_hw(np, "clk_ext3");
 	hws[IMX8MP_CLK_EXT4] = imx_obtain_fixed_clk_hw(np, "clk_ext4");
-	hws[IMX8MP_SAI1_MCLK] = imx_obtain_fixed_clk_hw(np, "sai1_mclk");
-	hws[IMX8MP_SAI2_MCLK] = imx_obtain_fixed_clk_hw(np, "sai2_mclk");
-	hws[IMX8MP_SAI3_MCLK] = imx_obtain_fixed_clk_hw(np, "sai3_mclk");
-	hws[IMX8MP_SAI5_MCLK] = imx_obtain_fixed_clk_hw(np, "sai5_mclk");
-	hws[IMX8MP_SAI6_MCLK] = imx_obtain_fixed_clk_hw(np, "sai6_mclk");
-	hws[IMX8MP_SAI7_MCLK] = imx_obtain_fixed_clk_hw(np, "sai7_mclk");
 
 	hws[IMX8MP_AUDIO_PLL1_REF_SEL] = imx_clk_hw_mux("audio_pll1_ref_sel", anatop_base + 0x0, 0, 2, pll_ref_sels, ARRAY_SIZE(pll_ref_sels));
 	hws[IMX8MP_AUDIO_PLL2_REF_SEL] = imx_clk_hw_mux("audio_pll2_ref_sel", anatop_base + 0x14, 0, 2, pll_ref_sels, ARRAY_SIZE(pll_ref_sels));
@@ -874,7 +861,6 @@ static int imx8mp_clocks_probe(struct platform_device *pdev)
 	hws[IMX8MP_CLK_MEDIA_DISP2_PIX] = imx8m_clk_hw_composite_bus("media_disp2_pix", imx8mp_media_disp2_pix_sels, ccm_base + 0x9300);
 
 	hws[IMX8MP_CLK_IPG_ROOT] = imx_clk_hw_divider2("ipg_root", "ahb_root", ccm_base + 0x9080, 0, 1);
-	hws[IMX8MP_CLK_IPG_AUDIO_ROOT] = imx_clk_hw_divider2("ipg_audio_root", "audio_ahb", ccm_base + 0x9180, 0, 1);
 
 	hws[IMX8MP_CLK_DRAM_ALT] = imx8m_clk_hw_composite("dram_alt", imx8mp_dram_alt_sels, ccm_base + 0xa000);
 	hws[IMX8MP_CLK_DRAM_APB] = imx8m_clk_hw_composite_critical("dram_apb", imx8mp_dram_apb_sels, ccm_base + 0xa080);
@@ -882,7 +868,6 @@ static int imx8mp_clocks_probe(struct platform_device *pdev)
 	hws[IMX8MP_CLK_VPU_G2] = imx8m_clk_hw_composite("vpu_g2", imx8mp_vpu_g2_sels, ccm_base + 0xa180);
 	hws[IMX8MP_CLK_CAN1] = imx8m_clk_hw_composite("can1", imx8mp_can1_sels, ccm_base + 0xa200);
 	hws[IMX8MP_CLK_CAN2] = imx8m_clk_hw_composite("can2", imx8mp_can2_sels, ccm_base + 0xa280);
-	hws[IMX8MP_CLK_PCIE_PHY] = imx8m_clk_hw_composite("pcie_phy", imx8mp_pcie_phy_sels, ccm_base + 0xa380);
 	hws[IMX8MP_CLK_PCIE_AUX] = imx8m_clk_hw_composite("pcie_aux", imx8mp_pcie_aux_sels, ccm_base + 0xa400);
 	hws[IMX8MP_CLK_I2C5] = imx8m_clk_hw_composite("i2c5", imx8mp_i2c5_sels, ccm_base + 0xa480);
 	hws[IMX8MP_CLK_I2C6] = imx8m_clk_hw_composite("i2c6", imx8mp_i2c6_sels, ccm_base + 0xa500);
@@ -992,7 +977,7 @@ static int imx8mp_clocks_probe(struct platform_device *pdev)
 	hws[IMX8MP_CLK_SIM_ENET_ROOT] = imx_clk_hw_gate4("sim_enet_root_clk", "enet_axi", ccm_base + 0x4400, 0);
 	hws[IMX8MP_CLK_GPU2D_ROOT] = imx_clk_hw_gate4("gpu2d_root_clk", "gpu2d_core", ccm_base + 0x4450, 0);
 	hws[IMX8MP_CLK_GPU3D_ROOT] = imx_clk_hw_gate4("gpu3d_root_clk", "gpu3d_core", ccm_base + 0x4460, 0);
-	hws[IMX8MP_CLK_SNVS_ROOT] = imx_clk_hw_gate4("snvs_root_clk", "ipg_root", ccm_base + 0x4470, 0);
+	hws[IMX8MP_CLK_SNVS_ROOT] = imx_clk_hw_gate2_flags("snvs_root_clk", "ipg_root", ccm_base + 0x4470, 0, CLK_IS_CRITICAL);
 	hws[IMX8MP_CLK_UART1_ROOT] = imx_clk_hw_gate4("uart1_root_clk", "uart1", ccm_base + 0x4490, 0);
 	hws[IMX8MP_CLK_UART2_ROOT] = imx_clk_hw_gate4("uart2_root_clk", "uart2", ccm_base + 0x44a0, 0);
 	hws[IMX8MP_CLK_UART3_ROOT] = imx_clk_hw_gate4("uart3_root_clk", "uart3", ccm_base + 0x44b0, 0);
@@ -1046,10 +1031,7 @@ static int imx8mp_clocks_probe(struct platform_device *pdev)
 
 	imx_clk_init_on(np, hws);
 
-	clk_prepare_enable(hws[IMX8MP_CLK_QOS_ENET_ROOT]->clk);
-	clk_prepare_enable(hws[IMX8MP_CLK_ENET_QOS_ROOT]->clk);
-
-	imx_register_uart_clocks();
+	imx_register_uart_clocks(4);
 
 	return 0;
 }
