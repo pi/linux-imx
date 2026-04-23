@@ -6,11 +6,13 @@
 make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- zImage dtbs -j32
 #make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- modules -j32
 
-mkdir -p $PWD/../build
+BDIR=linux
 
-cp $PWD/arch/arm/boot/zImage $PWD/../build/
-cp $PWD/arch/arm/boot/dts/myd-y6ull*.dtb $PWD/../build/
-cp $PWD/arch/arm/boot/dts/myd-y6ul*.dtb $PWD/../build/
+mkdir -p $BDIR
+
+cp $PWD/arch/arm/boot/zImage $BDIR
+cp $PWD/arch/arm/boot/dts/myd-y6ull*.dtb $BDIR
+cp $PWD/arch/arm/boot/dts/myd-y6ul*.dtb $BDIR
 
 #imxmake ARCH=arm modules -j32 2>!modules_build_errors.txt
 #make modules_install O="$PWD/../build"
